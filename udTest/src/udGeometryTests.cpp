@@ -2,6 +2,10 @@
 #include "gtest/gtest.h"
 #include "udPlatform.h"
 
+#define EXPECT_VEC3_NEAR(v0, v1, e) EXPECT_NEAR(v0.x, v1.x, e);\
+EXPECT_NEAR(v0.y, v1.y, e);\
+EXPECT_NEAR(v0.z, v1.z, e)
+
 TEST(GeometryTests, GeometryLines)
 {
   //point vs line
@@ -236,4 +240,109 @@ TEST(GeometryTests, GeometryLines)
     EXPECT_EQ(cpa, udDouble3::create(4.0, 0.0, 0.0));
     EXPECT_EQ(cpb, udDouble3::create(4.0, 0.0, -3.0));
   }
+}
+
+TEST(GeometryTests, GeometrySegmentTriangle)
+{
+  double epsilon = 1e-12;
+  udDouble3 t0 = {};
+  udDouble3 t1 = {};
+  udDouble3 t2 = {};
+
+  udDouble3 p0 = {};
+  udDouble3 p1 = {};
+
+  udGeometryCode result = udGC_Fail;
+  udDouble3 intersect = {};
+
+  //------------------------------------------------------------------------
+  // Intersecting
+  //------------------------------------------------------------------------
+  t0 = {0.0, -1.0, 0.0};
+  t1 = {-1.0, 1.0, 0.0};
+  t2 = {1.0, 1.0, 0.0};
+  p0 = {0.5, 0.5, 1.0};
+  p1 = {0.5, 0.5, -1.0};
+  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, &intersect);
+  EXPECT_EQ(result, udGC_Intersecting);
+  EXPECT_VEC3_NEAR(intersect, udDouble3::create(0.5, 0.5, 0.0), epsilon);
+
+  t0 = {0.0, -1.0, 0.0};
+  t1 = {1.0, 1.0, 0.0};
+  t2 = {-1.0, 1.0, 0.0};
+  p0 = {0.5, 0.5, 1.0};
+  p1 = {0.5, 0.5, -1.0};
+  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, &intersect);
+  EXPECT_EQ(result, udGC_Intersecting);
+  EXPECT_VEC3_NEAR(intersect, udDouble3::create(0.5, 0.5, 0.0), epsilon);
+
+  t0 = {0.0, -1.0, 0.0};
+  t1 = {-1.0, 1.0, 0.0};
+  t2 = {1.0, 1.0, 0.0};
+  p0 = {0.5, 0.5, -1.0};
+  p1 = {0.5, 0.5, 1.0};
+  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, &intersect);
+  EXPECT_EQ(result, udGC_Intersecting);
+  EXPECT_VEC3_NEAR(intersect, udDouble3::create(0.5, 0.5, 0.0), epsilon);
+
+  t0 = {0.0, -1.0, 0.0};
+  t1 = {1.0, 1.0, 0.0};
+  t2 = {-1.0, 1.0, 0.0};
+  p0 = {0.5, 0.5, -1.0};
+  p1 = {0.5, 0.5, 1.0};
+  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, &intersect);
+  EXPECT_EQ(result, udGC_Intersecting);
+  EXPECT_VEC3_NEAR(intersect, udDouble3::create(0.5, 0.5, 0.0), epsilon);
+
+  t0 = {0.0, 0.0, -1.0};
+  t1 = {0.0, -1.0, 1.0};
+  t2 = {0.0, 1.0, 1.0};
+  p0 = {-2.0, -0.25, 0.25};
+  p1 = {2.0, -0.25, 0.25};
+  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, &intersect);
+  EXPECT_EQ(result, udGC_Intersecting);
+  EXPECT_VEC3_NEAR(intersect, udDouble3::create(0.0, -0.25, 0.25), epsilon);
+
+  t0 = {0.0, 0.0, -1.0};
+  t1 = {0.0, 1.0, 1.0};
+  t2 = {0.0, -1.0, 1.0};
+  p0 = {-2.0, -0.25, 0.25};
+  p1 = {2.0, -0.25, 0.25};
+  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, &intersect);
+  EXPECT_EQ(result, udGC_Intersecting);
+  EXPECT_VEC3_NEAR(intersect, udDouble3::create(0.0, -0.25, 0.25), epsilon);
+
+  t0 = {0.0, 0.0, -1.0};
+  t1 = {0.0, -1.0, 1.0};
+  t2 = {0.0, 1.0, 1.0};
+  p0 = {2.0, -0.25, 0.25};
+  p1 = {-2.0, -0.25, 0.25};
+  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, &intersect);
+  EXPECT_EQ(result, udGC_Intersecting);
+  EXPECT_VEC3_NEAR(intersect, udDouble3::create(0.0, -0.25, 0.25), epsilon);
+
+  t0 = {0.0, 0.0, -1.0};
+  t1 = {0.0, 1.0, 1.0};
+  t2 = {0.0, -1.0, 1.0};
+  p0 = {2.0, -0.25, 0.25};
+  p1 = {-2.0, -0.25, 0.25};
+  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, &intersect);
+  EXPECT_EQ(result, udGC_Intersecting);
+  EXPECT_VEC3_NEAR(intersect, udDouble3::create(0.0, -0.25, 0.25), epsilon);
+
+  //------------------------------------------------------------------------
+  // Intersecting - segment is parallel
+  //------------------------------------------------------------------------
+  t0 = {0.0, -1.0, 0.0};
+  t1 = {-1.0, 1.0, 0.0};
+  t2 = {1.0, 1.0, 0.0};
+  p0 = {2.0, 0.0, 0.0};
+  p1 = {-2.0, 0.0, 0.0};
+  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, &intersect);
+  //EXPECT_EQ(result, udGC_Intersecting);
+  //EXPECT_VEC3_NEAR(intersect, udDouble3::create(0.5, 0.0, 0.0), epsilon);
+
+  //------------------------------------------------------------------------
+  // Non intersecting
+  //------------------------------------------------------------------------
 }

@@ -6,6 +6,14 @@ template<typename T> bool udIsZero(T value) { return udAbs(value) < udGetEpsilon
 #endif
 
 // ****************************************************************************
+// Author: Frank Hart, July 2020
+template<typename T>
+T udGeometry_ScalarTripleProduct(const udVector3<T> &u, const udVector3<T> &v, const udVector3<T> &w)
+{
+  return udDot(udCross3(u, v), w);
+}
+
+// ****************************************************************************
 // Author: Frank Hart, June 2020
 template<typename T>
 udGeometryCode udGeometry_CPPointLine3(const udVector3<T> &lineOrigin, const udVector3<T> &lineDirection, const udVector3<T> &point, udVector3<T> &out, T * pU)
@@ -90,18 +98,18 @@ udGeometryCode udGeometry_CPSegmentSegment3(const udVector3<T> &a0, const udVect
       }
       else
       {
-        udGeometry_CPPointSegment3(b0, b1, a0, bOut, &ub);
-        aOut = a0;
-        ua = T(0);
+      udGeometry_CPPointSegment3(b0, b1, a0, bOut, &ub);
+      aOut = a0;
+      ua = T(0);
       }
       goto epilogue;
     }
     else if (udIsZero(c)) //length of b is 0
     {
-      udGeometry_CPPointSegment3(a0, a1, b0, aOut, &ua);
-      bOut = b0;
-      ub = T(0);
-      goto epilogue;
+    udGeometry_CPPointSegment3(a0, a1, b0, aOut, &ua);
+    bOut = b0;
+    ub = T(0);
+    goto epilogue;
     }
 
     // clamp ua to 0
@@ -119,25 +127,25 @@ udGeometryCode udGeometry_CPSegmentSegment3(const udVector3<T> &a0, const udVect
   }
   else
   {
-    // clamp ua within [0,1]
-    sd = td = denom;
-    sn = b*e - c*d;
-    tn = a*e - b*d;
+  // clamp ua within [0,1]
+  sd = td = denom;
+  sn = b * e - c * d;
+  tn = a * e - b * d;
 
-    // clamp ua to 0
-    if (sn < T(0))
-    {
-      sn = T(0);
-      tn = e;
-      td = c;
-    }
-    // clamp ua to 1
-    else if (sn > sd)
-    {
-      sn = sd;
-      tn = e + b;
-      td = c;
-    }
+  // clamp ua to 0
+  if (sn < T(0))
+  {
+    sn = T(0);
+    tn = e;
+    td = c;
+  }
+  // clamp ua to 1
+  else if (sn > sd)
+  {
+    sn = sd;
+    tn = e + b;
+    td = c;
+  }
   }
 
   // clamp ub within [0,1]
@@ -174,8 +182,8 @@ udGeometryCode udGeometry_CPSegmentSegment3(const udVector3<T> &a0, const udVect
   }
 
 epilogue:
-  aOut = a0 + ua*da;
-  bOut = b0 + ub*db;
+  aOut = a0 + ua * da;
+  bOut = b0 + ub * db;
 
   if (pU != nullptr)
   {
@@ -184,4 +192,77 @@ epilogue:
   }
 
   return result;
+}
+
+// ****************************************************************************
+// Author: Frank Hart, July 2020
+// Based on Real Time Collision Detection, Christer Ericson p184
+template<typename T>
+udGeometryCode udGeometry_Barycentric(const udVector3<T> &t0, const udVector3<T> &t1, const udVector3<T> &t2, const udVector3<T> &p, udVector3<T> &uvw)
+{
+  udVector3<T> v0 = t1 - t0;
+  udVector3<T> v1 = t2 - t0;
+  udVector3<T> v2 = p - t0;
+
+  float d00 = Dot(v0, v0);
+  float d01 = Dot(v0, v1);
+  float d11 = Dot(v1, v1);
+  float d20 = Dot(v2, v0);
+  float d21 = Dot(v2, v1);
+
+  float denom = d00 * d11 - d01 * d01;
+
+  uvw.x = (d11 * d20 - d01 * d21) / denom;
+  uvw.y = (d00 * d21 - d01 * d20) / denom;
+  uvw.z = T(1) - v - w;
+}
+
+// ****************************************************************************
+// Author: Frank Hart, July 2020
+// Based on Real Time Collision Detection, Christer Ericson p184
+template<typename T>
+udGeometryCode udGeometry_FISegmentTriangle3(const udVector3<T> &t0, const udVector3<T> &t1, const udVector3<T> &t2, const udVector3<T> &s0, const udVector3<T> &s1, udVector3<T> *pIntersect)
+{
+  udVector3<T> s0s1 = s1 - s0;
+  udVector3<T> s0t0 = t0 - s0;
+  udVector3<T> s0t1 = t1 - s0;
+  udVector3<T> s0t2 = t2 - s0;
+
+  T u = udGeometry_ScalarTripleProduct(s0s1, s0t2, s0t1);
+  T v = udGeometry_ScalarTripleProduct(s0s1, s0t0, s0t2);
+  T w = udGeometry_ScalarTripleProduct(s0s1, s0t1, s0t0);
+
+  //Line is on triangle plane
+  if (udIsZero(u) && udIsZero(v) && udIsZero(w))
+  {
+    //Segment end points inside triangle
+
+
+    //Segment intersects triangle edge
+    /*udVector3<T> pt = {};
+    udVector3<T> ps = {};
+    udGeometry_CPSegmentSegment3(t0, t1, s0, s1, pt, ps);
+    T minDistSq = udMag3Sq(pt - ps);
+    udVector<T> */
+
+    return udGC_Fail;
+  }
+
+  int sign = 0;
+  sign |= (u < T(0) ? 1 : 0);
+  sign |= (v < T(0) ? 2 : 0);
+  sign |= (w < T(0) ? 4 : 0);
+
+  if (sign > 0 && sign < 7)
+    return udGC_NotIntersecting;
+
+  T denom = T(1) / (u + v + w);
+  u *= denom;
+  v *= denom;
+  w *= denom;
+
+  if (pIntersect)
+    *pIntersect = u * t0 + v * t1 + w * t2;
+
+  return udGC_Intersecting;
 }

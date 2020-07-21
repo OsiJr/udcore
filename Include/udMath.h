@@ -450,19 +450,19 @@ struct udRay
   static udRay<T> rotationAround(const udRay<T> &ray, const udVector3<T> &center, const udVector3<T> &axis, const T &angle);
 };
 
-template <typename T>
-struct udPlane
-{
-  udVector3<T> point;
-  udVector3<T> normal;
-
-  bool intersects(const udRay<T> &ray, udVector3<T> *pIntersectionPoint, T *pIntersectionDistance) const;
-
-  // static members
-  static udPlane<T> create(const udVector3<T> &position, const udVector3<T> &normal) { udPlane<T> r = { position, normal }; return r; }
-  template <typename U>
-  static udPlane<T> create(const udPlane<U> &_v) { udPlane<T> r = { udVector3<T>::create(_v.point), udVector3<T>::create(_v.normal) }; return r; }
-};
+//template <typename T>
+//struct udPlane
+//{
+//  udVector3<T> point;
+//  udVector3<T> normal;
+//
+//  bool intersects(const udRay<T> &ray, udVector3<T> *pIntersectionPoint, T *pIntersectionDistance) const;
+//
+//  // static members
+//  static udPlane<T> create(const udVector3<T> &position, const udVector3<T> &normal) { udPlane<T> r = { position, normal }; return r; }
+//  template <typename U>
+//  static udPlane<T> create(const udPlane<U> &_v) { udPlane<T> r = { udVector3<T>::create(_v.point), udVector3<T>::create(_v.normal) }; return r; }
+//};
 
 template <typename T>
 struct udMatrix4x4
