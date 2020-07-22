@@ -8,6 +8,22 @@ template<typename T> bool udIsZero(T value) { return udAbs(value) < udGetEpsilon
 // ****************************************************************************
 // Author: Frank Hart, July 2020
 template<typename T>
+bool udAreEqual(T a, T b)
+{
+  return udIsZero(a - b);
+}
+
+// ****************************************************************************
+// Author: Frank Hart, July 2020
+template<typename T>
+bool udAreEqual(const udVector3<T> &a, const udVector3<T> &b)
+{
+  return udAreEqual(a[0], b[0]) && udAreEqual(a[1], b[1]) && udAreEqual(a[2], b[2]);
+}
+
+// ****************************************************************************
+// Author: Frank Hart, July 2020
+template<typename T>
 T udGeometry_ScalarTripleProduct(const udVector3<T> &u, const udVector3<T> &v, const udVector3<T> &w)
 {
   return udDot(udCross3(u, v), w);
@@ -198,30 +214,42 @@ epilogue:
 // Author: Frank Hart, July 2020
 // Based on Real Time Collision Detection, Christer Ericson p184
 template<typename T>
-udGeometryCode udGeometry_Barycentric(const udVector3<T> &t0, const udVector3<T> &t1, const udVector3<T> &t2, const udVector3<T> &p, udVector3<T> &uvw)
+udGeometryCode udGeometry_Barycentric(const udVector3<T> &t0, const udVector3<T> &t1, const udVector3<T> &t2, const udVector3<T> &p, T &u, T &v, T &w)
 {
   udVector3<T> v0 = t1 - t0;
   udVector3<T> v1 = t2 - t0;
   udVector3<T> v2 = p - t0;
 
-  float d00 = Dot(v0, v0);
-  float d01 = Dot(v0, v1);
-  float d11 = Dot(v1, v1);
-  float d20 = Dot(v2, v0);
-  float d21 = Dot(v2, v1);
+  T d00 = udDot(v0, v0);
+  T d01 = udDot(v0, v1);
+  T d11 = udDot(v1, v1);
+  T d20 = udDot(v2, v0);
+  T d21 = udDot(v2, v1);
 
-  float denom = d00 * d11 - d01 * d01;
+  T denom = d00 * d11 - d01 * d01;
 
-  uvw.x = (d11 * d20 - d01 * d21) / denom;
-  uvw.y = (d00 * d21 - d01 * d20) / denom;
-  uvw.z = T(1) - v - w;
+  //Check for demon == 0?
+
+  v = (d11 * d20 - d01 * d21) / denom;
+  w = (d00 * d21 - d01 * d20) / denom;
+  u = T(1) - v - w;
+
+  return udGC_Success;
+}
+
+// ****************************************************************************
+// Author: Frank Hart, July 2020
+template<typename T>
+udGeometryCode udGeometry_FindQuaternion(const udPlane<T> &plane, udQuaternion<T> &q)
+{
+
 }
 
 // ****************************************************************************
 // Author: Frank Hart, July 2020
 // Based on Real Time Collision Detection, Christer Ericson p184
 template<typename T>
-udGeometryCode udGeometry_FISegmentTriangle3(const udVector3<T> &t0, const udVector3<T> &t1, const udVector3<T> &t2, const udVector3<T> &s0, const udVector3<T> &s1, udVector3<T> *pIntersect)
+udGeometryCode udGeometry_FISegmentTriangle3(const udVector3<T> &t0, const udVector3<T> &t1, const udVector3<T> &t2, const udVector3<T> &s0, const udVector3<T> &s1, udVector3<T> &intersect0, udVector3<T> &intersect1)
 {
   udVector3<T> s0s1 = s1 - s0;
   udVector3<T> s0t0 = t0 - s0;
@@ -232,19 +260,10 @@ udGeometryCode udGeometry_FISegmentTriangle3(const udVector3<T> &t0, const udVec
   T v = udGeometry_ScalarTripleProduct(s0s1, s0t0, s0t2);
   T w = udGeometry_ScalarTripleProduct(s0s1, s0t1, s0t0);
 
-  //Line is on triangle plane
+  // TODO Line is on triangle plane
   if (udIsZero(u) && udIsZero(v) && udIsZero(w))
   {
-    //Segment end points inside triangle
-
-
-    //Segment intersects triangle edge
-    /*udVector3<T> pt = {};
-    udVector3<T> ps = {};
-    udGeometry_CPSegmentSegment3(t0, t1, s0, s1, pt, ps);
-    T minDistSq = udMag3Sq(pt - ps);
-    udVector<T> */
-
+    // Flag as fail for now...
     return udGC_Fail;
   }
 
@@ -261,8 +280,7 @@ udGeometryCode udGeometry_FISegmentTriangle3(const udVector3<T> &t0, const udVec
   v *= denom;
   w *= denom;
 
-  if (pIntersect)
-    *pIntersect = u * t0 + v * t1 + w * t2;
+  intersect0 = u * t0 + v * t1 + w * t2;
 
   return udGC_Intersecting;
 }

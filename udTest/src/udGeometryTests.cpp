@@ -242,6 +242,85 @@ TEST(GeometryTests, GeometryLines)
   }
 }
 
+TEST(GeometryTests, GeometryEquivalence)
+{
+  EXPECT_TRUE(udAreEqual<double>(1.0, 1.0));
+  EXPECT_TRUE(udAreEqual<double>(1.0, 1.0 + udGetEpsilon<double>() * 0.5));
+
+  EXPECT_FALSE(udAreEqual<double>(2.0, 3.0));
+  EXPECT_FALSE(udAreEqual<double>(2.0, 2.0 + udGetEpsilon<double>() * 1.5));
+
+  udDouble3 a = {1.0, 2.0, 3.0};
+  udDouble3 b = {1.01, 2.01, 3.01};
+
+  EXPECT_TRUE(udAreEqual(a, a));
+  EXPECT_FALSE(udAreEqual(a, b));
+}
+
+bool CheckBarycentricResult(udDouble3 t0, udDouble3 t1, udDouble3 t2, udDouble3 p, double u, double v, double w)
+{
+  double epsilon = 0.01;
+  double ru, rv, rw;
+  udGeometryCode result = udGeometry_Barycentric(t0, t1, t2, p, ru, rv, rw);
+  if (result != udGC_Success)
+    return false;
+
+  if (udAbs(ru - u) > epsilon)
+    return false;
+
+  if (udAbs(rv - v) > epsilon)
+    return false;
+
+  if (udAbs(rw - w) > epsilon)
+    return false;
+
+  return true;
+}
+
+//Compared with results from https: //www.geogebra.org/m/ZuvmPjmy
+TEST(GeometryTests, GeometryBaryCentric)
+{
+  udDouble3 t0 = {};
+  udDouble3 t1 = {};
+  udDouble3 t2 = {};
+
+  double a = 1.0;
+  double b = udSqrt(3.0) / 2.0;
+  double c = 0.5;
+
+  t0 = {0.0, a, 0.0};
+  t1 = {b, -c, 0.0};
+  t2 = {-b, -c, 0.0};
+
+  EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {0.0, 0.0, 0.0}, 0.33, 0.33, 0.33));
+  EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {0.0, 0.0, 345.0}, 0.33, 0.33, 0.33));
+  EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {0.0, 0.0, -327}, 0.33, 0.33, 0.33));
+
+  EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {1.0, 1.0, 0.0}, 1.0, 0.58, -0.58));
+  EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {1.0, 1.0, 345.0}, 1.0, 0.58, -0.58));
+  EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {1.0, 1.0, -327}, 1.0, 0.58, -0.58));
+
+  EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {0.0, 1.0, 0.0}, 1.0, 0.0, 0.0));
+  EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {0.0, 1.0, 345.0}, 1.0, 0.0, 0.0));
+  EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {0.0, 1.0, -327}, 1.0, 0.0, 0.0));
+
+  EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {0.0, 2.0, 0.0}, 1.67, -0.33, -0.33));
+  EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {0.0, 2.0, 345.0}, 1.67, -0.33, -0.33));
+  EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {0.0, 2.0, -327}, 1.67, -0.33, -0.33));
+
+  EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {-1.0, 1.0, 0.0}, 1.0, -0.58, 0.58));
+  EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {-1.0, 1.0, 345.0}, 1.0, -0.58, 0.58));
+  EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {-1.0, 1.0, -327}, 1.0, -0.58, 0.58));
+
+  EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {0.0, -1.0, 0.0}, -0.33, 0.67, 0.67));
+  EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {0.0, -1.0, 345.0}, -0.33, 0.67, 0.67));
+  EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {0.0, -1.0, -327}, -0.33, 0.67, 0.67));
+
+  EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {0.2, 0.2, 0.0}, 0.47, 0.38, 0.15));
+  EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {0.2, 0.2, 345.0}, 0.47, 0.38, 0.15));
+  EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {0.2, 0.2, -327}, 0.47, 0.38, 0.15));
+}
+
 TEST(GeometryTests, GeometrySegmentTriangle)
 {
   double epsilon = 1e-12;
@@ -253,7 +332,8 @@ TEST(GeometryTests, GeometrySegmentTriangle)
   udDouble3 p1 = {};
 
   udGeometryCode result = udGC_Fail;
-  udDouble3 intersect = {};
+  udDouble3 intersect0 = {};
+  udDouble3 intersect1 = {};
 
   //------------------------------------------------------------------------
   // Intersecting
@@ -263,72 +343,72 @@ TEST(GeometryTests, GeometrySegmentTriangle)
   t2 = {1.0, 1.0, 0.0};
   p0 = {0.5, 0.5, 1.0};
   p1 = {0.5, 0.5, -1.0};
-  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, &intersect);
+  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, intersect0, intersect1);
   EXPECT_EQ(result, udGC_Intersecting);
-  EXPECT_VEC3_NEAR(intersect, udDouble3::create(0.5, 0.5, 0.0), epsilon);
+  EXPECT_VEC3_NEAR(intersect0, udDouble3::create(0.5, 0.5, 0.0), epsilon);
 
   t0 = {0.0, -1.0, 0.0};
   t1 = {1.0, 1.0, 0.0};
   t2 = {-1.0, 1.0, 0.0};
   p0 = {0.5, 0.5, 1.0};
   p1 = {0.5, 0.5, -1.0};
-  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, &intersect);
+  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, intersect0, intersect1);
   EXPECT_EQ(result, udGC_Intersecting);
-  EXPECT_VEC3_NEAR(intersect, udDouble3::create(0.5, 0.5, 0.0), epsilon);
+  EXPECT_VEC3_NEAR(intersect0, udDouble3::create(0.5, 0.5, 0.0), epsilon);
 
   t0 = {0.0, -1.0, 0.0};
   t1 = {-1.0, 1.0, 0.0};
   t2 = {1.0, 1.0, 0.0};
   p0 = {0.5, 0.5, -1.0};
   p1 = {0.5, 0.5, 1.0};
-  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, &intersect);
+  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, intersect0, intersect1);
   EXPECT_EQ(result, udGC_Intersecting);
-  EXPECT_VEC3_NEAR(intersect, udDouble3::create(0.5, 0.5, 0.0), epsilon);
+  EXPECT_VEC3_NEAR(intersect0, udDouble3::create(0.5, 0.5, 0.0), epsilon);
 
   t0 = {0.0, -1.0, 0.0};
   t1 = {1.0, 1.0, 0.0};
   t2 = {-1.0, 1.0, 0.0};
   p0 = {0.5, 0.5, -1.0};
   p1 = {0.5, 0.5, 1.0};
-  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, &intersect);
+  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, intersect0, intersect1);
   EXPECT_EQ(result, udGC_Intersecting);
-  EXPECT_VEC3_NEAR(intersect, udDouble3::create(0.5, 0.5, 0.0), epsilon);
+  EXPECT_VEC3_NEAR(intersect0, udDouble3::create(0.5, 0.5, 0.0), epsilon);
 
   t0 = {0.0, 0.0, -1.0};
   t1 = {0.0, -1.0, 1.0};
   t2 = {0.0, 1.0, 1.0};
   p0 = {-2.0, -0.25, 0.25};
   p1 = {2.0, -0.25, 0.25};
-  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, &intersect);
+  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, intersect0, intersect1);
   EXPECT_EQ(result, udGC_Intersecting);
-  EXPECT_VEC3_NEAR(intersect, udDouble3::create(0.0, -0.25, 0.25), epsilon);
+  EXPECT_VEC3_NEAR(intersect0, udDouble3::create(0.0, -0.25, 0.25), epsilon);
 
   t0 = {0.0, 0.0, -1.0};
   t1 = {0.0, 1.0, 1.0};
   t2 = {0.0, -1.0, 1.0};
   p0 = {-2.0, -0.25, 0.25};
   p1 = {2.0, -0.25, 0.25};
-  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, &intersect);
+  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, intersect0, intersect1);
   EXPECT_EQ(result, udGC_Intersecting);
-  EXPECT_VEC3_NEAR(intersect, udDouble3::create(0.0, -0.25, 0.25), epsilon);
+  EXPECT_VEC3_NEAR(intersect0, udDouble3::create(0.0, -0.25, 0.25), epsilon);
 
   t0 = {0.0, 0.0, -1.0};
   t1 = {0.0, -1.0, 1.0};
   t2 = {0.0, 1.0, 1.0};
   p0 = {2.0, -0.25, 0.25};
   p1 = {-2.0, -0.25, 0.25};
-  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, &intersect);
+  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, intersect0, intersect1);
   EXPECT_EQ(result, udGC_Intersecting);
-  EXPECT_VEC3_NEAR(intersect, udDouble3::create(0.0, -0.25, 0.25), epsilon);
+  EXPECT_VEC3_NEAR(intersect0, udDouble3::create(0.0, -0.25, 0.25), epsilon);
 
   t0 = {0.0, 0.0, -1.0};
   t1 = {0.0, 1.0, 1.0};
   t2 = {0.0, -1.0, 1.0};
   p0 = {2.0, -0.25, 0.25};
   p1 = {-2.0, -0.25, 0.25};
-  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, &intersect);
+  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, intersect0, intersect1);
   EXPECT_EQ(result, udGC_Intersecting);
-  EXPECT_VEC3_NEAR(intersect, udDouble3::create(0.0, -0.25, 0.25), epsilon);
+  EXPECT_VEC3_NEAR(intersect0, udDouble3::create(0.0, -0.25, 0.25), epsilon);
 
   //------------------------------------------------------------------------
   // Intersecting - segment is parallel
@@ -338,9 +418,9 @@ TEST(GeometryTests, GeometrySegmentTriangle)
   t2 = {1.0, 1.0, 0.0};
   p0 = {2.0, 0.0, 0.0};
   p1 = {-2.0, 0.0, 0.0};
-  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, &intersect);
+  result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, intersect0, intersect1);
   //EXPECT_EQ(result, udGC_Intersecting);
-  //EXPECT_VEC3_NEAR(intersect, udDouble3::create(0.5, 0.0, 0.0), epsilon);
+  //EXPECT_VEC3_NEAR(intersect0, udDouble3::create(0.5, 0.0, 0.0), epsilon);
 
   //------------------------------------------------------------------------
   // Non intersecting
