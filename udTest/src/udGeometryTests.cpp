@@ -321,6 +321,25 @@ TEST(GeometryTests, GeometryBaryCentric)
   EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {0.2, 0.2, -327}, 0.47, 0.38, 0.15));
 }
 
+TEST(GeometryTests, PlaneCreation)
+{
+  typedef udPlane<double> udDoublePlane;
+  udDoublePlane plane;
+
+  EXPECT_EQ(udGeometry_CreatePlane({1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 1.0, 1.0}, plane), udGC_Success);
+  EXPECT_EQ(plane, udDoublePlane::create(1.0, 0.0, 0.0, -1.0));
+
+  EXPECT_EQ(udGeometry_CreatePlane({1.0, 0.0, 0.0}, {2.0, 0.0, 0.0}, {3.0, 0.0, 0.0}, plane), udGC_Fail);
+}
+
+// TODO this need many more tests!
+TEST(GeometryTests, CPPointTriangle)
+{
+  udDouble3 cp = {};
+  EXPECT_EQ(udGeometry_CPPointTriangle3({1.0, -1.0, -1.0}, {1.0, 1.0, -1.0}, {1.0, 0.0, 10.0}, {2.0, 0.0, 0.5}, cp), udGC_Success);
+  EXPECT_EQ(cp, udDouble3::create(1.0, 0.0, 0.5));
+}
+
 TEST(GeometryTests, GeometrySegmentTriangle)
 {
   double epsilon = 1e-12;
@@ -411,18 +430,14 @@ TEST(GeometryTests, GeometrySegmentTriangle)
   EXPECT_VEC3_NEAR(intersect0, udDouble3::create(0.0, -0.25, 0.25), epsilon);
 
   //------------------------------------------------------------------------
-  // Intersecting - segment is parallel
+  // Non intersecting
   //------------------------------------------------------------------------
   t0 = {0.0, -1.0, 0.0};
   t1 = {-1.0, 1.0, 0.0};
   t2 = {1.0, 1.0, 0.0};
-  p0 = {2.0, 0.0, 0.0};
-  p1 = {-2.0, 0.0, 0.0};
+  p0 = {10.0, 0.5, 1.0};
+  p1 = {10.0, 0.5, -1.0};
   result = udGeometry_FISegmentTriangle3(t0, t1, t2, p0, p1, intersect0, intersect1);
-  //EXPECT_EQ(result, udGC_Intersecting);
-  //EXPECT_VEC3_NEAR(intersect0, udDouble3::create(0.5, 0.0, 0.0), epsilon);
+  EXPECT_EQ(result, udGC_NotIntersecting);
 
-  //------------------------------------------------------------------------
-  // Non intersecting
-  //------------------------------------------------------------------------
 }
