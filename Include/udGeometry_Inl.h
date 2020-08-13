@@ -30,6 +30,48 @@ T udGeometry_ScalarTripleProduct(const udVector3<T> &u, const udVector3<T> &v, c
 }
 
 // ****************************************************************************
+// Author: Frank Hart, August 2020
+template<typename T>
+udGeometryCode udGeometry_CreatePlane(const udVector3<T> &p0, const udVector3<T> &p1, const udVector3<T> &p2, udPlane<T> &out)
+{
+  //Get plane vector
+  udVector3<T> u = p1 - p0;
+  udVector3<T> v = p2 - p0;
+  udVector3<T> w = udCross3(u, v);
+
+  //normalise for cheap distance checks
+  T lensq = w.x * w.x + w.y * w.y + w.z * w.z;
+
+  //recover gracefully
+  if (udIsZero(lensq))
+    return udGC_Fail;
+
+  T recip = T(1) / udSqrt(lensq);
+  udVector3<T> normal = {w.x* recip, w.y * recip, w.z * recip};
+  T offset = udDot(-p0, normal);
+  out = {normal.x, normal.y, normal.z, offset};
+
+  return udGC_Success;
+}
+
+// ****************************************************************************
+// Author: Frank Hart, August 2020
+template<typename T> T udGeometry_SignedDistance(const udPlane<T> &plane, const udVector3<T> &point)
+{
+  return udDot(point, plane.toVector3()) + plane.w;
+}
+
+// ****************************************************************************
+// Author: Frank Hart, August 2020
+template<typename T> udGeometryCode udGeometry_CPPointPlane(const udPlane<T> &plane, const udVector3<T> &point, udVector3<T> &out)
+{
+  T signedDistance = udGeometry_SignedDistance(plane, point);
+  out = point - signedDistance * plane.toVector3();
+
+  return udGC_Success;
+}
+
+// ****************************************************************************
 // Author: Frank Hart, June 2020
 template<typename T>
 udGeometryCode udGeometry_CPPointLine3(const udVector3<T> &lineOrigin, const udVector3<T> &lineDirection, const udVector3<T> &point, udVector3<T> &out, T * pU)
@@ -216,25 +258,25 @@ epilogue:
 template<typename T>
 udGeometryCode udGeometry_Barycentric(const udVector3<T> &t0, const udVector3<T> &t1, const udVector3<T> &t2, const udVector3<T> &p, T &u, T &v, T &w)
 {
-  udVector3<T> v0 = t1 - t0;
-  udVector3<T> v1 = t2 - t0;
-  udVector3<T> v2 = p - t0;
+udVector3<T> v0 = t1 - t0;
+udVector3<T> v1 = t2 - t0;
+udVector3<T> v2 = p - t0;
 
-  T d00 = udDot(v0, v0);
-  T d01 = udDot(v0, v1);
-  T d11 = udDot(v1, v1);
-  T d20 = udDot(v2, v0);
-  T d21 = udDot(v2, v1);
+T d00 = udDot(v0, v0);
+T d01 = udDot(v0, v1);
+T d11 = udDot(v1, v1);
+T d20 = udDot(v2, v0);
+T d21 = udDot(v2, v1);
 
-  T denom = d00 * d11 - d01 * d01;
+T denom = d00 * d11 - d01 * d01;
 
-  //Check for demon == 0?
+//Check for demon == 0?
 
-  v = (d11 * d20 - d01 * d21) / denom;
-  w = (d00 * d21 - d01 * d20) / denom;
-  u = T(1) - v - w;
+v = (d11 * d20 - d01 * d21) / denom;
+w = (d00 * d21 - d01 * d20) / denom;
+u = T(1) - v - w;
 
-  return udGC_Success;
+return udGC_Success;
 }
 
 // ****************************************************************************
@@ -283,4 +325,76 @@ udGeometryCode udGeometry_FISegmentTriangle3(const udVector3<T> &t0, const udVec
   intersect0 = u * t0 + v * t1 + w * t2;
 
   return udGC_Intersecting;
+}
+
+template<typename T>
+udGeometryCode udGeometry_CPPointTriangle3(const udVector3<T> &t0, const udVector3<T> &t1, const udVector3<T> &t2, const udVector3<T> &point, udVector3<T> &out)
+{
+  udVector3<T> v01 = t1 - t0;
+  udVector3<T> v02 = t2 - t0;
+  udVector3<T> v0p = point - t0;
+
+  T d1 = udDot(v01, v0p);
+  T d2 = udDot(v02, v0p);
+
+  udGeometryCode result = udGC_Success;
+
+  do
+  {
+    if (d1 <= T(0) && d2 <= T(0))
+    {
+      out = t0;
+      break;
+    }
+
+    udVector3<T> v1p = point - t1;
+    T d3 = udDot(v01, v1p);
+    T d4 = udDot(v02, v1p);
+    if (d3 >= T(0) && d4 <= d3)
+    {
+      out = t1;
+      break;
+    }
+
+    T v2 = d1 * d4 - d3 * d2;
+    if (v2 <= T(0) && d1 >= T(0) && d3 <= T(0))
+    {
+      T v = d1 / (d1 - d3);
+      out = t0 + v * v01;
+      break;
+    }
+
+    udVector3<T> v2p = point - t2;
+    T d5 = udDot(v01, v2p);
+    T d6 = udDot(v02, v2p);
+    if (d6 >= T(0) && d5 <= d6)
+    {
+      out = t2;
+      break;
+    }
+
+    T v1 = d5 * d2 - d1 * d6;
+    if (v1 <= T(0) && d2 >= T(0) && d6 <= T(0))
+    {
+      T w = d2 / (d2 - d6);
+      out = t0 + w * v02;
+      break;
+    }
+
+    T v0 = d3 * d6 - d5 * d4;
+    if (v0 <= T(0) && (d4 - d3) >= T(0) && (d5 - d6) >= T(0))
+    {
+      T w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
+      out = t1 + w * (t2 - t1);
+      break;
+    }
+
+    T denom = T(1) / (v0 + v1 + v2);
+    T v = v1 * denom;
+    T w = v2 * denom;
+    out = t0 + v01 * v + v02 * w;
+
+  } while (false);
+
+  return result;
 }
