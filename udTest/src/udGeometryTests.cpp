@@ -321,15 +321,28 @@ TEST(GeometryTests, GeometryBaryCentric)
   EXPECT_TRUE(CheckBarycentricResult(t0, t1, t2, {0.2, 0.2, -327}, 0.47, 0.38, 0.15));
 }
 
-TEST(GeometryTests, PlaneCreation)
+TEST(GeometryTests, Planes)
 {
   typedef udPlane<double> udDoublePlane;
   udDoublePlane plane;
 
-  EXPECT_EQ(udGeometry_CreatePlane({1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 1.0, 1.0}, plane), udGC_Success);
-  EXPECT_EQ(plane, udDoublePlane::create(1.0, 0.0, 0.0, -1.0));
+  // Creation
+  {
+    EXPECT_EQ(udGeometry_CreatePlane({1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 1.0, 1.0}, plane), udGC_Success);
+    EXPECT_EQ(plane, udDoublePlane::create(1.0, 0.0, 0.0, -1.0));
 
-  EXPECT_EQ(udGeometry_CreatePlane({1.0, 0.0, 0.0}, {2.0, 0.0, 0.0}, {3.0, 0.0, 0.0}, plane), udGC_Fail);
+    EXPECT_EQ(udGeometry_CreatePlane({1.0, 0.0, 0.0}, {2.0, 0.0, 0.0}, {3.0, 0.0, 0.0}, plane), udGC_Fail);
+  }
+
+  // Distance fom point to plane
+  {
+    udDouble3 cp;
+    udGeometry_CreatePlane({1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 1.0, 1.0}, plane);
+
+    EXPECT_EQ(udGeometry_SignedDistance(plane, {42.0, 1.0, 1.0}), 41.0);
+    EXPECT_EQ(udGeometry_SignedDistance(plane, {-42.0, 1.0, 1.0}), -43.0);
+    EXPECT_EQ(udGeometry_SignedDistance(plane, {1.0, 1.0, 1.0}), .0);
+  }
 }
 
 // TODO this need many more tests!
