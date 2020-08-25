@@ -56,6 +56,15 @@ udGeometryCode udGeometry_CreatePlane(const udVector3<T> &p0, const udVector3<T>
 
 // ****************************************************************************
 // Author: Frank Hart, August 2020
+template<typename T>
+udGeometryCode udGeometry_CreatePlane(const udVector3<T> &point, const udVector3<T> &normal, udPlane<T> &out)
+{
+  out = udPlane<T>::create(normal.x, normal.y, normal.z, -udDot(point, normal));
+  return udGC_Success;
+}
+
+// ****************************************************************************
+// Author: Frank Hart, August 2020
 template<typename T> T udGeometry_SignedDistance(const udPlane<T> &plane, const udVector3<T> &point)
 {
   return udDot(point, plane.toVector3()) + plane.w;

@@ -331,6 +331,9 @@ TEST(GeometryTests, Planes)
     EXPECT_EQ(udGeometry_CreatePlane({1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {1.0, 1.0, 1.0}, plane), udGC_Success);
     EXPECT_EQ(plane, udDoublePlane::create(1.0, 0.0, 0.0, -1.0));
 
+    EXPECT_EQ(udGeometry_CreatePlane({1.0, 1.0, 1.0}, {1.0, 0.0, 0.0}, plane), udGC_Success);
+    EXPECT_EQ(plane, udDoublePlane::create(1.0, 0.0, 0.0, -1.0));
+
     EXPECT_EQ(udGeometry_CreatePlane({1.0, 0.0, 0.0}, {2.0, 0.0, 0.0}, {3.0, 0.0, 0.0}, plane), udGC_Fail);
   }
 
