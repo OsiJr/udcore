@@ -1,5 +1,5 @@
-#ifndef UDGEOMETRY_H
-#define UDGEOMETRY_H
+#ifndef UDGEOMETRYTOOLS_H
+#define UDGEOMETRYTOOLS_H
 
 #include "udMath.h"
 
