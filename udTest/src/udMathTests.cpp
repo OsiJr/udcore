@@ -1,5 +1,4 @@
 #include "udMath.h"
-#include "udGeometry.h"
 #include "gtest/gtest.h"
 #include "udPlatform.h"
 #include "udMathUtility.h"
