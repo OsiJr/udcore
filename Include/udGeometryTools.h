@@ -40,8 +40,15 @@ template<typename T> bool udIsZero(T value);
 // volume of the parallelepiped formed by the three vectors u, v and w.
 template<typename T> T udGeometry_ScalarTripleProduct(const udVector3<T> &u, const udVector3<T> &v, const udVector3<T> &w);
 
-//Compute the barycentric coordinates of a point wrt a triangle.
+// Compute the barycentric coordinates of a point wrt a triangle.
 template<typename T> udGeometryCode udGeometry_Barycentric(const udVector3<T> &t0, const udVector3<T> &t1, const udVector3<T> &t2, const udVector3<T> &p, T &u, T &v, T &w);
+
+template<typename T> T udGeometry_GetTriangleArea(const udVector3<T> &t0, const udVector3<T> &t1, const udVector3<T> &t2);
+
+template<typename T> T udGeometry_GetTriangleArea(const udVector3<T> &sideLengths);
+
+// Compute the lengths of the triangle in the order [(t0 - t1), (t0 - t2), (t1 - t2)]
+template<typename T> udVector3<T> udGeometry_GetTriangleSideLengths(const udVector3<T> &t0, const udVector3<T> &t1, const udVector3<T> &t2);
 
 //--------------------------------------------------------------------------------
 // Object Creation

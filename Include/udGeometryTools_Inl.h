@@ -57,6 +57,46 @@ udGeometryCode udGeometry_CreatePlane(const udVector3<T> &p0, const udVector3<T>
 // ****************************************************************************
 // Author: Frank Hart, August 2020
 template<typename T>
+T udGeometry_GetTriangleArea(const udVector3<T> &t0, const udVector3<T> &t1, const udVector3<T> &t2)
+{
+  return udGeometry_GetTriangleArea(udGeometry_GetTriangleSideLengths(t0, t1, t2));
+}
+
+// ****************************************************************************
+// Author: Frank Hart, August 2020
+template<typename T>
+T udGeometry_GetTriangleArea(const udVector3<T> &sideLengths)
+{
+  T p = (sideLengths[0] + sideLengths[1] + sideLengths[2]) / T(2);
+
+  // Theoritically these values should not be below zero, but due to floting point
+  // error, they can be. So we need to check.
+  T a = (p - sideLengths[0]);
+  if (a <= T(0))
+    return T(0);
+
+  T b = (p - sideLengths[1]);
+  if (b <= T(0))
+    return T(0);
+
+  T c = (p - sideLengths[2]);
+  if (c <= T(0))
+    return T(0);
+
+  return udSqrt(p * a * b * c);
+}
+
+// ****************************************************************************
+// Author: Frank Hart, August 2020
+template<typename T>
+udVector3<T> udGeometry_GetTriangleSideLengths(const udVector3<T> &t0, const udVector3<T> &t1, const udVector3<T> &t2)
+{
+  return udVector3<T>::create(udMag(t0 - t1), udMag(t0 - t2), udMag(t1 - t2));
+}
+
+// ****************************************************************************
+// Author: Frank Hart, August 2020
+template<typename T>
 udGeometryCode udGeometry_CreatePlane(const udVector3<T> &point, const udVector3<T> &normal, udPlane<T> &out)
 {
   out = udPlane<T>::create(normal.x, normal.y, normal.z, -udDot(point, normal));

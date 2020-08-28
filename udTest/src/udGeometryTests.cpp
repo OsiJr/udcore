@@ -457,3 +457,19 @@ TEST(GeometryTests, GeometrySegmentTriangle)
   EXPECT_EQ(result, udGC_NotIntersecting);
 
 }
+
+TEST(GeometryTests, GeometryTrianglesGeneral)
+{
+  udDouble3 t0 = {1.0, 0.0, 0.0};
+  udDouble3 t1 = {udCos(120.0 / 180.0 * UD_PI), udSin(120.0 / 180.0 * UD_PI), 0.0};
+  udDouble3 t2 = {udCos(240.0 / 180.0 * UD_PI), udSin(240.0 / 180.0 * UD_PI), 0.0};
+  double side = 2.0 * udCos(30.0 / 180.0 * UD_PI);
+  double area = udSqrt(3.0) * side * side / 4.0;
+  const double epsilon = 0.0000001;
+
+  udDouble3 sideLengths = udGeometry_GetTriangleSideLengths(t0, t1, t2);
+  EXPECT_VEC3_NEAR(sideLengths, udDouble3::create(side, side, side), epsilon);
+
+  EXPECT_NEAR(udGeometry_GetTriangleArea(t0, t1, t2), area, epsilon);
+  EXPECT_NEAR(udGeometry_GetTriangleArea(sideLengths), area, epsilon);
+}
