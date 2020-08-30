@@ -36,6 +36,15 @@ template<typename T> bool udAreEqual(const udVector3<T> &v0, const udVector3<T> 
 // Otherwise it will test if value == T(0)
 template<typename T> bool udIsZero(T value);
 
+// Utility function to sort two values
+template<typename T> void udGeometry_SortLowToHigh(T &a, T &b);
+
+// Utility function to sort vector elements
+template<typename T> udVector3<T> udGeometry_SortLowToHigh(const udVector3<T> &a);
+
+// Utility function to sum vector elements
+template<typename T> T udGeometry_Sum(const udVector3<T> &v);
+
 // The scalar triple product is defined as ((v x u) . w), which is equivilent to the signed
 // volume of the parallelepiped formed by the three vectors u, v and w.
 template<typename T> T udGeometry_ScalarTripleProduct(const udVector3<T> &u, const udVector3<T> &v, const udVector3<T> &w);
@@ -43,12 +52,20 @@ template<typename T> T udGeometry_ScalarTripleProduct(const udVector3<T> &u, con
 // Compute the barycentric coordinates of a point wrt a triangle.
 template<typename T> udGeometryCode udGeometry_Barycentric(const udVector3<T> &t0, const udVector3<T> &t1, const udVector3<T> &t2, const udVector3<T> &p, T &u, T &v, T &w);
 
+// Compute triangle area given triangle vertices
 template<typename T> T udGeometry_GetTriangleArea(const udVector3<T> &t0, const udVector3<T> &t1, const udVector3<T> &t2);
 
+// Compute triangle area given triangle vertices
+template<typename T> T udGeometry_GetTriangleArea(const udVector2<T> &t0, const udVector2<T> &t1, const udVector2<T> &t2);
+
+// Compute triangle area given triangle side lengths
 template<typename T> T udGeometry_GetTriangleArea(const udVector3<T> &sideLengths);
 
 // Compute the lengths of the triangle in the order [(t0 - t1), (t0 - t2), (t1 - t2)]
 template<typename T> udVector3<T> udGeometry_GetTriangleSideLengths(const udVector3<T> &t0, const udVector3<T> &t1, const udVector3<T> &t2);
+
+// Compute the lengths of the triangle in the order [(t0 - t1), (t0 - t2), (t1 - t2)]
+template<typename T> udVector3<T> udGeometry_GetTriangleSideLengths(const udVector2<T> &t0, const udVector2<T> &t1, const udVector2<T> &t2);
 
 //--------------------------------------------------------------------------------
 // Object Creation

@@ -6,6 +6,18 @@
 EXPECT_NEAR(v0.y, v1.y, e);\
 EXPECT_NEAR(v0.z, v1.z, e)
 
+TEST(GeometryTests, GeometryUtility)
+{
+  double a = 2.0, b = 1.0;
+  udGeometry_SortLowToHigh(a, b);
+  EXPECT_EQ(a, 1.0);
+  EXPECT_EQ(b, 2.0);
+
+  udInt3 arr = {3, 2, 1};
+  EXPECT_EQ(udGeometry_SortLowToHigh(arr), udInt3::create(1, 2, 3));
+  EXPECT_EQ(udGeometry_Sum(arr), 6);
+}
+
 TEST(GeometryTests, GeometryLines)
 {
   //point vs line
@@ -460,16 +472,38 @@ TEST(GeometryTests, GeometrySegmentTriangle)
 
 TEST(GeometryTests, GeometryTrianglesGeneral)
 {
-  udDouble3 t0 = {1.0, 0.0, 0.0};
-  udDouble3 t1 = {udCos(120.0 / 180.0 * UD_PI), udSin(120.0 / 180.0 * UD_PI), 0.0};
-  udDouble3 t2 = {udCos(240.0 / 180.0 * UD_PI), udSin(240.0 / 180.0 * UD_PI), 0.0};
-  double side = 2.0 * udCos(30.0 / 180.0 * UD_PI);
-  double area = udSqrt(3.0) * side * side / 4.0;
-  const double epsilon = 0.0000001;
+  {
+    udDouble3 t0 = {1.0, 0.0, 0.0};
+    udDouble3 t1 = {udCos(120.0 / 180.0 * UD_PI), udSin(120.0 / 180.0 * UD_PI), 0.0};
+    udDouble3 t2 = {udCos(240.0 / 180.0 * UD_PI), udSin(240.0 / 180.0 * UD_PI), 0.0};
+    double side = 2.0 * udCos(30.0 / 180.0 * UD_PI);
+    double area = udSqrt(3.0) * side * side / 4.0;
+    const double epsilon = 0.0000001;
 
-  udDouble3 sideLengths = udGeometry_GetTriangleSideLengths(t0, t1, t2);
-  EXPECT_VEC3_NEAR(sideLengths, udDouble3::create(side, side, side), epsilon);
+    udDouble3 sideLengths = udGeometry_GetTriangleSideLengths(t0, t1, t2);
+    EXPECT_VEC3_NEAR(sideLengths, udDouble3::create(side, side, side), epsilon);
 
-  EXPECT_NEAR(udGeometry_GetTriangleArea(t0, t1, t2), area, epsilon);
-  EXPECT_NEAR(udGeometry_GetTriangleArea(sideLengths), area, epsilon);
+    EXPECT_NEAR(udGeometry_GetTriangleArea(t0, t1, t2), area, epsilon);
+    EXPECT_NEAR(udGeometry_GetTriangleArea(sideLengths), area, epsilon);
+  }
+
+  {
+    udDouble2 t0 = {1.0, 0.0};
+    udDouble2 t1 = {udCos(120.0 / 180.0 * UD_PI), udSin(120.0 / 180.0 * UD_PI)};
+    udDouble2 t2 = {udCos(240.0 / 180.0 * UD_PI), udSin(240.0 / 180.0 * UD_PI)};
+    double side = 2.0 * udCos(30.0 / 180.0 * UD_PI);
+    double area = udSqrt(3.0) * side * side / 4.0;
+    const double epsilon = 0.0000001;
+
+    udDouble3 sideLengths = udGeometry_GetTriangleSideLengths(t0, t1, t2);
+    EXPECT_VEC3_NEAR(sideLengths, udDouble3::create(side, side, side), epsilon);
+
+    EXPECT_NEAR(udGeometry_GetTriangleArea(t0, t1, t2), area, epsilon);
+    EXPECT_NEAR(udGeometry_GetTriangleArea(sideLengths), area, epsilon);
+  }
+
+  {
+
+
+  }
 }

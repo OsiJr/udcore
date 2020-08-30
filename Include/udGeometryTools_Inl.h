@@ -57,7 +57,50 @@ udGeometryCode udGeometry_CreatePlane(const udVector3<T> &p0, const udVector3<T>
 // ****************************************************************************
 // Author: Frank Hart, August 2020
 template<typename T>
+void udGeometry_SortLowToHigh(T &a, T &b)
+{
+  if (b < a)
+  {
+    T temp = a;
+    a = b;
+    b = temp;
+  }
+}
+
+// ****************************************************************************
+// Author: Frank Hart, August 2020
+template<typename T>
+udVector3<T> udGeometry_SortLowToHigh(const udVector3<T> &a)
+{
+  udVector3<T> result = a;
+
+  udGeometry_SortLowToHigh(result[0], result[1]);
+  udGeometry_SortLowToHigh(result[0], result[2]);
+  udGeometry_SortLowToHigh(result[1], result[2]);
+
+  return result;
+}
+
+// ****************************************************************************
+// Author: Frank Hart, August 2020
+template<typename T>
+T udGeometry_Sum(const udVector3<T> &v)
+{
+  return v[0] + v[1] + v[2];
+}
+
+// ****************************************************************************
+// Author: Frank Hart, August 2020
+template<typename T>
 T udGeometry_GetTriangleArea(const udVector3<T> &t0, const udVector3<T> &t1, const udVector3<T> &t2)
+{
+  return udGeometry_GetTriangleArea(udGeometry_GetTriangleSideLengths(t0, t1, t2));
+}
+
+// ****************************************************************************
+// Author: Frank Hart, August 2020
+template<typename T>
+T udGeometry_GetTriangleArea(const udVector2<T> &t0, const udVector2<T> &t1, const udVector2<T> &t2)
 {
   return udGeometry_GetTriangleArea(udGeometry_GetTriangleSideLengths(t0, t1, t2));
 }
@@ -90,6 +133,14 @@ T udGeometry_GetTriangleArea(const udVector3<T> &sideLengths)
 // Author: Frank Hart, August 2020
 template<typename T>
 udVector3<T> udGeometry_GetTriangleSideLengths(const udVector3<T> &t0, const udVector3<T> &t1, const udVector3<T> &t2)
+{
+  return udVector3<T>::create(udMag(t0 - t1), udMag(t0 - t2), udMag(t1 - t2));
+}
+
+// ****************************************************************************
+// Author: Frank Hart, August 2020
+template<typename T>
+udVector3<T> udGeometry_GetTriangleSideLengths(const udVector2<T> &t0, const udVector2<T> &t1, const udVector2<T> &t2)
 {
   return udVector3<T>::create(udMag(t0 - t1), udMag(t0 - t2), udMag(t1 - t2));
 }
